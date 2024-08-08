@@ -1,7 +1,7 @@
 'use client'
 
 import { Box, Button, Stack, TextField } from '@mui/material';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Home() {
   const [messages, setMessages] = useState([
@@ -11,9 +11,12 @@ export default function Home() {
     },
   ]);
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
   const sendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || isLoading) return;
+    setIsLoading(true);
     setMessage('');
     setMessages((messages) => [
       ...messages,
@@ -57,7 +60,23 @@ export default function Home() {
         { role: 'assistant', content: "I'm sorry, but I encountered an error. Please try again later." },
       ]);
     }
+    setIsLoading(false);
   };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   return (
     <Box
@@ -67,6 +86,7 @@ export default function Home() {
       flexDirection="column"
       justifyContent="center"
       alignItems="center"
+      bgcolor="white"  // Set background color to white
     >
       <Stack
         direction={'column'}
@@ -105,6 +125,7 @@ export default function Home() {
               </Box>
             </Box>
           ))}
+          <div ref={messagesEndRef} />
         </Stack>
         <Stack direction={'row'} spacing={2}>
           <TextField
@@ -112,20 +133,15 @@ export default function Home() {
             fullWidth
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-              }
-            }}
-            disabled={false}
+            onKeyPress={handleKeyPress}
+            disabled={isLoading}
           />
-          <Button
-            variant="contained"
+          <Button 
+            variant="contained" 
             onClick={sendMessage}
-            disabled={false}
+            disabled={isLoading}
           >
-            Send
+            {isLoading ? 'Sending...' : 'Send'}
           </Button>
         </Stack>
       </Stack>
