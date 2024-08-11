@@ -30,29 +30,40 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify([...messages, { role: 'user', content: message }]),
+        body: JSON.stringify({ prompt: message }),
       });
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+      // const reader = response.body.getReader();
+      // const decoder = new TextDecoder();
+      const data = await response.json();
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const text = decoder.decode(value, { stream: true });
-        setMessages((messages) => {
-          let lastMessage = messages[messages.length - 1];
-          let otherMessages = messages.slice(0, messages.length - 1);
-          return [
-            ...otherMessages,
-            { ...lastMessage, content: lastMessage.content + text },
-          ];
-        });
-      }
+      // while (true) {
+      //   const { done, value } = await reader.read();
+      //   if (done) break;
+      //   const text = decoder.decode(value, { stream: true });
+      //   setMessages((messages) => {
+      //     let lastMessage = messages[messages.length - 1];
+      //     let otherMessages = messages.slice(0, messages.length - 1);
+      //     return [
+      //       ...otherMessages,
+      //       { ...lastMessage, content: lastMessage.content + text },
+      //     ];
+      //   });
+      // }
+      setMessages((messages) => {
+        let lastMessage = messages[messages.length - 1];
+        let otherMessages = messages.slice(0, messages.length - 1);
+        return [
+          ...otherMessages,
+          { ...lastMessage, content: data.text.trim() },
+        ];
+      });
+
+
     } catch (error) {
       console.error('Error:', error);
       setMessages((messages) => [
